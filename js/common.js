@@ -8,9 +8,13 @@ const FIXED_PASSWORD = "5340";
 
 // ---- Google Sheets sync (optional — makes every device see the same data) ---
 // วาง Web app URL ของ Apps Script ที่ deploy แล้วตรงนี้ ไม่ต้องกรอกใหม่ทุกเครื่อง
-const DEFAULT_SCRIPT_URL = "";
+const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyw8pLiBWa20gW6XvYn7ijXbe3ugLSzJNC7s_y_X_UOMEYd_tV6xe4sm8XGFCI-gR2XxQ/exec";
 // ต้องตรงกับ SYNC_TOKEN ใน Code.gs ทุกตัวอักษร
 const SYNC_TOKEN = "meen";
+
+// ค่าเริ่มต้นของ Gemini API Key (โหมดออนไลน์) — ใส่ไว้ล่วงหน้าไม่ต้องกรอกทุกเครื่อง
+// ยังแก้ทับได้จากหน้าตั้งค่าในแอปถ้าต้องการเปลี่ยนคีย์
+const DEFAULT_GEMINI_KEY = "AQ.Ab8RN6IdyzuZV6L5yBCh43bNhsBAHaoLqdMhE8MHumjD3WBueQ";
 
 // ---- storage keys --------------------------------------------------------
 const LS_KEYS = {
@@ -97,6 +101,10 @@ function getScriptUrl() {
 
 function setScriptUrl(url) {
   localStorage.setItem(LS_KEYS.SCRIPT_URL, url || "");
+}
+
+function getGeminiKey() {
+  return localStorage.getItem(LS_KEYS.GEMINI_KEY) || DEFAULT_GEMINI_KEY;
 }
 
 async function syncBootstrap() {

@@ -168,7 +168,7 @@ requireLogin();
 
   // ---- settings modal -------------------------------------------------------
   function openSettings() {
-    apiKeyInput.value = localStorage.getItem(LS_KEYS.GEMINI_KEY) || "";
+    apiKeyInput.value = getGeminiKey();
     modelInput.value = localStorage.getItem(LS_KEYS.GEMINI_MODEL) || DEFAULT_GEMINI_MODEL;
     scriptUrlInput.value = getScriptUrl();
     settingsError.textContent = "";
@@ -219,7 +219,7 @@ requireLogin();
 
   // ---- online AI (Gemini) -----------------------------------------------
   async function callGemini(userText) {
-    const apiKey = localStorage.getItem(LS_KEYS.GEMINI_KEY);
+    const apiKey = getGeminiKey();
     const model = localStorage.getItem(LS_KEYS.GEMINI_MODEL) || DEFAULT_GEMINI_MODEL;
     if (!apiKey) {
       openSettings();
