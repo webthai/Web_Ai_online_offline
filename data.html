@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>ข้อมูลออฟไลน์ · AI แชท</title>
+<link rel="icon" href="1.png" />
+<link rel="apple-touch-icon" href="1.png" />
+<link rel="manifest" href="manifest.json" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#0b0d10" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app-shell">
+
+  <div class="topbar">
+    <button class="btn-icon" id="backBtn" type="button">← กลับ</button>
+    <div class="title">ข้อมูลออฟไลน์</div>
+    <div class="topbar-spacer"></div>
+  </div>
+
+  <div class="data-body">
+    <p class="data-intro">
+      เพิ่มคู่ “คำ/วลี” และ “คำตอบ” ไว้ล่วงหน้า เวลาแชทในโหมดออฟไลน์ ถ้าข้อความที่พิมพ์ตรงหรือมีคำนี้อยู่
+      AI จะตอบด้วยข้อความที่กำหนดไว้ทันที — ข้อมูลชุดนี้ยังถูกใช้ตรวจสอบก่อนเสมอแม้อยู่ในโหมดออนไลน์ด้วย
+    </p>
+
+    <form class="data-form" id="dataForm">
+      <div class="field">
+        <label for="keywordInput">คำ/วลีที่พิมพ์ (คีย์เวิร์ด)</label>
+        <textarea id="keywordInput" rows="1" placeholder="เช่น Hi, สวัสดี"></textarea>
+      </div>
+      <div class="field">
+        <label for="replyInput">คำตอบที่ AI จะใช้ตอบ</label>
+        <textarea id="replyInput" rows="1" placeholder="เช่น Yo"></textarea>
+      </div>
+      <button class="btn btn-primary" id="saveEntryBtn" type="submit" style="max-width:140px">เพิ่ม</button>
+    </form>
+
+    <div class="data-table-wrap" id="dataTableWrap">
+      <div class="data-empty" id="dataEmpty">ยังไม่มีข้อมูล — เพิ่มคู่คำแรกของคุณด้านบน</div>
+    </div>
+  </div>
+</div>
+
+<script src="js/common.js"></script>
+<script src="js/data.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "AI แชท ออนไลน์/ออฟไลน์",
+  "short_name": "AI แชท",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0b0d10",
+  "theme_color": "#0b0d10",
+  "icons": [
+    { "src": "1.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
