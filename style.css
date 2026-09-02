@@ -1,0 +1,590 @@
+/* ==========================================================================
+   AI Chat (Online/Offline) — shared styles
+   Works fully offline. System fonts only (no external font/CDN loads).
+   Tested against iOS 15.x Safari constraints: no :has(), no backdrop-filter
+   reliance, flex/gap only, no dvh units.
+   ========================================================================== */
+
+:root {
+  --bg-base: #0b0d10;
+  --bg-surface: #14171c;
+  --bg-surface-2: #1c2027;
+  --bg-surface-3: #242933;
+  --border: #262b33;
+  --text-primary: #edeff2;
+  --text-muted: #8b93a1;
+  --text-faint: #5a616e;
+  --accent: #33c2a4;
+  --accent-strong: #49dabd;
+  --accent-ink: #06201a;
+  --status-online: #33c97a;
+  --status-offline: #e5484d;
+  --danger: #e5484d;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: 16px; /* prevents iOS Safari auto-zoom on focus */
+}
+
+a {
+  color: var(--accent-strong);
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* focus visibility (fallback for older Safari without :focus-visible) */
+button:focus,
+input:focus,
+textarea:focus,
+a:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* -------------------------------------------------------------------- */
+/* Login page                                                            */
+/* -------------------------------------------------------------------- */
+
+.login-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 360px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px 28px;
+  background: var(--bg-surface);
+}
+
+.login-mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.login-mark svg {
+  width: 24px;
+  height: 24px;
+}
+
+.login-card h1 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+.login-card p.sub {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+.field {
+  margin-bottom: 14px;
+}
+
+.field label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.field input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-surface-2);
+  color: var(--text-primary);
+}
+
+.btn {
+  appearance: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.05s ease, opacity 0.15s ease;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  width: 100%;
+  margin-top: 6px;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.btn-icon {
+  background: var(--bg-surface-2);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.error-text {
+  color: var(--danger);
+  font-size: 13px;
+  min-height: 18px;
+  margin-top: 4px;
+}
+
+/* -------------------------------------------------------------------- */
+/* App shell (chat + data pages)                                        */
+/* -------------------------------------------------------------------- */
+
+.app-shell {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-surface);
+}
+
+.topbar .title {
+  font-weight: 700;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--status-offline);
+  flex: 0 0 auto;
+}
+
+.status-dot.is-online {
+  background: var(--status-online);
+  box-shadow: 0 0 0 3px rgba(51, 201, 122, 0.18);
+}
+
+.status-dot.is-offline {
+  background: var(--status-offline);
+  box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.18);
+}
+
+.topbar-spacer {
+  flex: 1 1 auto;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mode-toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--bg-surface-2);
+}
+
+.mode-toggle button {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mode-toggle button.active {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.mode-toggle button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* -------------------------------------------------------------------- */
+/* Chat                                                                  */
+/* -------------------------------------------------------------------- */
+
+.chat-window {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bubble-row {
+  display: flex;
+  width: 100%;
+}
+
+.bubble-row.from-user {
+  justify-content: flex-end;
+}
+
+.bubble-row.from-ai {
+  justify-content: flex-start;
+}
+
+.bubble {
+  max-width: 78%;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 14.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.bubble-row.from-user .bubble {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-bottom-right-radius: 4px;
+}
+
+.bubble-row.from-ai .bubble {
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+
+.bubble-meta {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: 0.65;
+}
+
+.empty-state {
+  margin: auto;
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 13.5px;
+  padding: 24px;
+  max-width: 320px;
+}
+
+.composer {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  background: var(--bg-surface);
+}
+
+.composer textarea {
+  flex: 1 1 auto;
+  resize: none;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-surface-2);
+  color: var(--text-primary);
+  padding: 10px 12px;
+  max-height: 120px;
+  line-height: 1.4;
+}
+
+.composer .send-btn {
+  flex: 0 0 auto;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: none;
+  border-radius: var(--radius-md);
+  width: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.composer .send-btn:disabled {
+  opacity: 0.4;
+}
+
+/* -------------------------------------------------------------------- */
+/* Modal (settings / API key)                                           */
+/* -------------------------------------------------------------------- */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 5, 7, 0.6);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 40;
+}
+
+@media (min-width: 640px) {
+  .modal-backdrop {
+    align-items: center;
+  }
+}
+
+.modal-backdrop.hidden {
+  display: none;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  padding: 22px 20px calc(20px + env(safe-area-inset-bottom));
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+@media (min-width: 640px) {
+  .modal-card {
+    border-radius: var(--radius-lg);
+  }
+}
+
+.modal-card h2 {
+  font-size: 17px;
+  margin: 0 0 6px;
+}
+
+.modal-card p.sub {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 0 0 18px;
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.modal-actions .btn {
+  flex: 1 1 0;
+}
+
+/* -------------------------------------------------------------------- */
+/* Data page                                                             */
+/* -------------------------------------------------------------------- */
+
+.data-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+}
+
+.data-intro {
+  color: var(--text-muted);
+  font-size: 13.5px;
+  line-height: 1.6;
+  margin: 0 0 18px;
+  max-width: 640px;
+}
+
+.data-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 560px) {
+  .data-form {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+  .data-form .field {
+    flex: 1 1 0;
+    margin-bottom: 0;
+  }
+}
+
+.data-form textarea {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-surface-2);
+  color: var(--text-primary);
+  padding: 10px 12px;
+  resize: vertical;
+  min-height: 42px;
+}
+
+.data-table-wrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.data-row {
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+
+.data-row:last-child {
+  border-bottom: none;
+}
+
+.data-row .col {
+  flex: 1 1 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.data-row .col .k {
+  display: block;
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-bottom: 3px;
+}
+
+.data-row .row-actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 6px;
+}
+
+.data-row .row-actions button {
+  border: 1px solid var(--border);
+  background: var(--bg-surface-2);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  padding: 6px 9px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.data-row .row-actions button.danger {
+  color: var(--danger);
+}
+
+.data-empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 13.5px;
+}
+
+.hint-banner {
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  line-height: 1.55;
+}
+
+.hint-banner strong {
+  color: var(--text-primary);
+}
+
+@media (max-width: 480px) {
+  .topbar .title {
+    display: none;
+  }
+}
