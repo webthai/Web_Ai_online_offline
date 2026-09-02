@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>เข้าสู่ระบบ · AI แชท</title>
+<link rel="icon" href="1.png" />
+<link rel="apple-touch-icon" href="1.png" />
+<link rel="manifest" href="manifest.json" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<meta name="theme-color" content="#0b0d10" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="login-shell">
+  <form class="login-card" id="loginForm" autocomplete="off">
+    <div class="login-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 5.5C4 4.67 4.67 4 5.5 4h13c.83 0 1.5.67 1.5 1.5v9c0 .83-.67 1.5-1.5 1.5H9l-4 3.5v-3.5H5.5C4.67 16 4 15.33 4 14.5v-9z" fill="#06201a"/>
+      </svg>
+    </div>
+    <h1>AI แชท ออนไลน์ / ออฟไลน์</h1>
+    <p class="sub">เข้าสู่ระบบเพื่อเริ่มแชท ใช้งานได้แม้ไม่มีอินเทอร์เน็ต</p>
+
+    <div class="field">
+      <label for="username">ชื่อผู้ใช้</label>
+      <input id="username" name="username" type="text" placeholder="ชื่อผู้ใช้" autocapitalize="off" autocorrect="off" />
+    </div>
+    <div class="field">
+      <label for="password">รหัสผ่าน</label>
+      <input id="password" name="password" type="password" placeholder="รหัสผ่าน" />
+    </div>
+
+    <div class="error-text" id="errorText"></div>
+    <button class="btn btn-primary" type="submit" id="loginBtn">เข้าสู่ระบบ</button>
+  </form>
+</div>
+
+<script src="js/common.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>
