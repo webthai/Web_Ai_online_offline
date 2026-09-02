@@ -12,9 +12,11 @@ const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyw8pLiBWa20
 // ต้องตรงกับ SYNC_TOKEN ใน Code.gs ทุกตัวอักษร
 const SYNC_TOKEN = "meen";
 
-// ค่าเริ่มต้นของ Gemini API Key (โหมดออนไลน์) — ใส่ไว้ล่วงหน้าไม่ต้องกรอกทุกเครื่อง
-// ยังแก้ทับได้จากหน้าตั้งค่าในแอปถ้าต้องการเปลี่ยนคีย์
-const DEFAULT_GEMINI_KEY = "AQ.Ab8RN6IdyzuZV6L5yBCh43bNhsBAHaoLqdMhE8MHumjD3WBueQ";
+// ค่าเริ่มต้นของ Gemini API Key (โหมดออนไลน์) — เว้นว่างไว้โดยตั้งใจ
+// เพราะไฟล์นี้จะถูก push ขึ้น public GitHub repo ถ้าใส่คีย์จริงลงตรงนี้
+// คีย์จะถูกมองเห็นได้จากใครก็ตามที่ดูซอร์สโค้ด (GitHub เองก็บล็อกการ push แบบนี้)
+// ให้กรอกคีย์ในหน้าตั้งค่าของแอปแทน จะถูกเก็บไว้ใน localStorage ของเครื่องนั้นเท่านั้น
+const DEFAULT_GEMINI_KEY = "";
 
 // ---- storage keys --------------------------------------------------------
 const LS_KEYS = {
@@ -27,7 +29,7 @@ const LS_KEYS = {
   SCRIPT_URL: "aichat_script_url",
 };
 
-const DEFAULT_GEMINI_MODEL = "gemini-flash-latest";
+const DEFAULT_GEMINI_MODEL = "gemini-3.6-flash";
 
 // ---- auth guard ------------------------------------------------------
 function requireLogin() {
