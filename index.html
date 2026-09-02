@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ผู้ช่วยแชท ออฟไลน์/ออนไลน์</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===================== AUTH SCREEN ===================== -->
+  <section id="authScreen" class="screen active">
+    <div class="auth-card">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <h1>ผู้ช่วยแชท</h1>
+        <p class="brand-sub">ใช้ได้ทั้งแบบออฟไลน์และออนไลน์</p>
+      </div>
+
+      <div class="tabbar" role="tablist">
+        <button class="tab active" data-tab="login" role="tab" aria-selected="true">เข้าสู่ระบบ</button>
+        <button class="tab" data-tab="register" role="tab" aria-selected="false">สมัครสมาชิก</button>
+      </div>
+
+      <form id="loginForm" class="auth-form" autocomplete="off">
+        <label>ชื่อผู้ใช้
+          <input type="text" id="loginUsername" required autocomplete="username">
+        </label>
+        <label>รหัสผ่าน
+          <input type="password" id="loginPassword" required autocomplete="current-password">
+        </label>
+        <button type="submit" class="btn btn-primary">เข้าสู่ระบบ (ออนไลน์)</button>
+        <button type="button" id="loginOfflineBtn" class="btn btn-ghost">เข้าสู่ระบบแบบออฟไลน์</button>
+        <p class="form-note">เข้าสู่ระบบออฟไลน์ใช้ได้เฉพาะอุปกรณ์ที่เคยเข้าสู่ระบบออนไลน์มาก่อนแล้วเท่านั้น</p>
+      </form>
+
+      <form id="registerForm" class="auth-form hidden" autocomplete="off">
+        <label>ชื่อผู้ใช้
+          <input type="text" id="registerUsername" required autocomplete="username">
+        </label>
+        <label>รหัสผ่าน
+          <input type="password" id="registerPassword" required minlength="4" autocomplete="new-password">
+        </label>
+        <label>ยืนยันรหัสผ่าน
+          <input type="password" id="registerPassword2" required minlength="4" autocomplete="new-password">
+        </label>
+        <button type="submit" class="btn btn-primary">สมัครสมาชิก (ออนไลน์)</button>
+        <p class="form-note">ผู้สมัครคนแรกของระบบจะกลายเป็นผู้ดูแลระบบ (admin) โดยอัตโนมัติ</p>
+      </form>
+
+      <div id="authMsg" class="auth-msg" aria-live="polite"></div>
+
+      <div class="url-config">
+        <button type="button" id="toggleUrlConfig" class="link-btn">ตั้งค่า URL เซิร์ฟเวอร์</button>
+        <div id="urlConfigBox" class="hidden">
+          <label>Apps Script Web App URL
+            <input type="url" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/xxxx/exec">
+          </label>
+          <button type="button" id="saveUrlBtn" class="btn btn-secondary">บันทึก URL</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== MAIN SCREEN ===================== -->
+  <section id="mainScreen" class="screen">
+
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="brand-dot small"></span>
+        <div>
+          <div class="who" id="whoLabel">—</div>
+          <div class="sync-status" id="syncStatus">—</div>
+        </div>
+      </div>
+      <button id="logoutBtn" class="btn btn-ghost btn-sm">ออกจากระบบ</button>
+    </header>
+
+    <div class="mode-toggle" role="tablist" aria-label="เลือกโหมด">
+      <button class="mode-btn mode-offline active" data-mode="offline" role="tab" aria-selected="true">
+        <span class="mode-dot"></span>โหมดออฟไลน์
+      </button>
+      <button class="mode-btn mode-online" data-mode="online" role="tab" aria-selected="false">
+        <span class="mode-dot"></span>โหมดออนไลน์
+      </button>
+    </div>
+
+    <nav class="pagenav">
+      <button class="pagebtn active" data-page="chat">แชท</button>
+      <button class="pagebtn" data-page="data">ข้อมูลของฉัน</button>
+    </nav>
+
+    <!-- ---------- CHAT PAGE ---------- -->
+    <div class="page active" id="page-chat">
+      <div class="chat-log" id="chatLog"></div>
+      <form id="chatForm" class="chat-inputbar">
+        <input type="text" id="chatInput" placeholder="พิมพ์คำถาม..." autocomplete="off" required>
+        <button type="submit" class="btn btn-primary btn-sm">ส่ง</button>
+      </form>
+    </div>
+
+    <!-- ---------- DATA PAGE ---------- -->
+    <div class="page" id="page-data">
+      <div class="data-toolbar">
+        <button id="addEntryBtn" class="btn btn-primary btn-sm">+ เพิ่มข้อมูลใหม่</button>
+        <button id="syncNowBtn" class="btn btn-secondary btn-sm">ซิงค์ข้อมูลตอนนี้</button>
+        <select id="ownerFilter" class="hidden"></select>
+      </div>
+      <div id="pendingBanner" class="pending-banner hidden"></div>
+      <div class="entries-list" id="entriesList"></div>
+    </div>
+
+  </section>
+
+  <!-- ---------- ENTRY EDIT MODAL ---------- -->
+  <div id="entryModal" class="modal hidden">
+    <div class="modal-card">
+      <h2 id="entryModalTitle">เพิ่มข้อมูล</h2>
+      <form id="entryForm">
+        <input type="hidden" id="entryId">
+        <label>คำถาม / หัวข้อ
+          <input type="text" id="entryQuestion" required>
+        </label>
+        <label>คำตอบ / รายละเอียด
+          <textarea id="entryAnswer" rows="4" required></textarea>
+        </label>
+        <label>คำสำคัญ (คั่นด้วยจุลภาค , เพื่อช่วยการค้นหาตอนออฟไลน์)
+          <input type="text" id="entryKeywords" placeholder="เช่น เวลาทำการ, ที่อยู่, ราคา">
+        </label>
+        <label>หมวดหมู่
+          <input type="text" id="entryCategory">
+        </label>
+        <div class="modal-actions">
+          <button type="button" id="entryCancelBtn" class="btn btn-ghost">ยกเลิก</button>
+          <button type="submit" class="btn btn-primary">บันทึก</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
