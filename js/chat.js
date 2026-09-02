@@ -169,7 +169,7 @@ requireLogin();
   // ---- settings modal -------------------------------------------------------
   function openSettings() {
     apiKeyInput.value = getGroqKey();
-    modelInput.value = localStorage.getItem(LS_KEYS.GROQ_MODEL) || DEFAULT_GROQ_MODEL;
+    modelInput.value = getGroqModel();
     scriptUrlInput.value = getScriptUrl();
     settingsError.textContent = "";
     settingsModal.classList.remove("hidden");
@@ -220,7 +220,7 @@ requireLogin();
   // ---- online AI (Groq — free tier, OpenAI-compatible) -----------------------
   async function callGroq(userText) {
     const apiKey = getGroqKey();
-    const model = localStorage.getItem(LS_KEYS.GROQ_MODEL) || DEFAULT_GROQ_MODEL;
+    const model = getGroqModel();
     if (!apiKey) {
       openSettings();
       throw new Error("ยังไม่ได้ตั้งค่า API Key — กรุณาใส่ Groq API Key ในหน้าตั้งค่า");
