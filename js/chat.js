@@ -22,12 +22,13 @@ requireLogin();
   const settingsModal = document.getElementById("settingsModal");
   const apiKeyInput = document.getElementById("apiKeyInput");
   const modelInput = document.getElementById("modelInput");
+  const scriptUrlInput = document.getElementById("scriptUrlInput");
   const settingsError = document.getElementById("settingsError");
   const closeSettingsBtn = document.getElementById("closeSettingsBtn");
   const saveSettingsBtn = document.getElementById("saveSettingsBtn");
 
   // ---- state --------------------------------------------------------------
-  let history = readJson(LS_KEYS.CHAT_HISTORY, []); // [{role, text, time}]
+  let history = readJson(LS_KEYS.CHAT_HISTORY, []); // [{id, role, text, time, ts, synced}]
   let mode = localStorage.getItem(LS_KEYS.MODE) || (navigator.onLine ? "online" : "offline");
   let connectivityForcedOffline = false;
   let busy = false;
@@ -61,13 +62,63 @@ requireLogin();
     chatWindow.scrollTop = chatWindow.scrollHeight;
   }
 
-  function pushMessage(role, text) {
-    const time = nowBangkokLabel();
-    history.push({ role: role, text: text, time: time });
+  function pushMessage(role, text, opts) {
+    opts = opts || {};
+    const time = opts.time || nowBangkokLabel();
+    const msg = {
+      id: opts.id || uuid(),
+      role: role,
+      text: text,
+      time: time,
+      ts: opts.ts || Date.now(),
+      synced: opts.synced || false,
+    };
+    history.push(msg);
     // keep history bounded so localStorage doesn't grow forever
     if (history.length > 200) history = history.slice(history.length - 200);
     writeJson(LS_KEYS.CHAT_HISTORY, history);
-    appendBubble(role, text, time);
+    if (opts.render !== false) appendBubble(role, text, time);
+    if (!msg.synced) {
+      syncPushMessage(msg).then(function (res) {
+        if (res && res.ok) {
+          msg.synced = true;
+          writeJson(LS_KEYS.CHAT_HISTORY, history);
+        }
+      });
+    }
+    return msg;
+  }
+
+  // ---- Google Sheets sync: pull remote history once on load, then keep
+  // pushing new messages as they're sent (see pushMessage above) ------------
+  async function syncChatOnLoad() {
+    const data = await syncBootstrap();
+    if (!data || !Array.isArray(data.chat)) return;
+    const localIds = new Set(history.map(function (m) { return m.id; }));
+    let changed = false;
+    data.chat.forEach(function (m) {
+      if (!localIds.has(m.id)) {
+        history.push({ id: m.id, role: m.role, text: m.text, time: m.time, ts: Number(m.ts) || Date.now(), synced: true });
+        changed = true;
+      }
+    });
+    if (changed) {
+      history.sort(function (a, b) { return a.ts - b.ts; });
+      if (history.length > 200) history = history.slice(history.length - 200);
+      writeJson(LS_KEYS.CHAT_HISTORY, history);
+      renderAll();
+    }
+  }
+
+  function retryUnsyncedMessages() {
+    history.filter(function (m) { return !m.synced; }).forEach(function (m) {
+      syncPushMessage(m).then(function (res) {
+        if (res && res.ok) {
+          m.synced = true;
+          writeJson(LS_KEYS.CHAT_HISTORY, history);
+        }
+      });
+    });
   }
 
   // ---- mode / connectivity -------------------------------------------------
@@ -93,6 +144,7 @@ requireLogin();
       connectivityForcedOffline = false;
       setMode("online");
     }
+    if (online) retryUnsyncedMessages();
   }
 
   modeOnlineBtn.addEventListener("click", function () {
@@ -118,6 +170,7 @@ requireLogin();
   function openSettings() {
     apiKeyInput.value = localStorage.getItem(LS_KEYS.GEMINI_KEY) || "";
     modelInput.value = localStorage.getItem(LS_KEYS.GEMINI_MODEL) || DEFAULT_GEMINI_MODEL;
+    scriptUrlInput.value = getScriptUrl();
     settingsError.textContent = "";
     settingsModal.classList.remove("hidden");
   }
@@ -138,7 +191,12 @@ requireLogin();
     }
     localStorage.setItem(LS_KEYS.GEMINI_KEY, key);
     localStorage.setItem(LS_KEYS.GEMINI_MODEL, model);
+    setScriptUrl(scriptUrlInput.value.trim());
     closeSettings();
+    if (navigator.onLine) {
+      retryUnsyncedMessages();
+      syncChatOnLoad();
+    }
   });
 
   // ---- offline keyword matching ---------------------------------------------
@@ -255,4 +313,5 @@ requireLogin();
   renderAll();
   setMode(mode);
   updateConnectivityUI();
+  syncChatOnLoad();
 })();

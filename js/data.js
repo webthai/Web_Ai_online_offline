@@ -16,6 +16,30 @@ requireLogin();
   let entries = readJson(LS_KEYS.OFFLINE_DATA, []);
   let editingId = null;
 
+  async function syncEntriesOnLoad() {
+    const data = await syncBootstrap();
+    if (!data || !Array.isArray(data.entries)) return;
+    const localIds = new Set(entries.map(function (x) { return x.id; }));
+    let changed = false;
+    data.entries.forEach(function (r) {
+      const existing = entries.find(function (x) { return x.id === r.id; });
+      if (existing) {
+        if (existing.keyword !== r.keyword || existing.reply !== r.reply) {
+          existing.keyword = r.keyword;
+          existing.reply = r.reply;
+          changed = true;
+        }
+      } else {
+        entries.push({ id: r.id, keyword: r.keyword, reply: r.reply });
+        changed = true;
+      }
+    });
+    if (changed) {
+      persist();
+      render();
+    }
+  }
+
   backBtn.addEventListener("click", function () {
     window.location.href = "ai.html";
   });
@@ -62,6 +86,7 @@ requireLogin();
       if (editingId === id) resetForm();
       persist();
       render();
+      syncDeleteEntry(id);
     } else if (action === "edit") {
       editingId = id;
       keywordInput.value = item.keyword;
@@ -91,14 +116,21 @@ requireLogin();
       if (item) {
         item.keyword = keyword;
         item.reply = reply;
+        persist();
+        render();
+        resetForm();
+        syncPushEntry(item);
       }
     } else {
-      entries.push({ id: uuid(), keyword: keyword, reply: reply });
+      const item = { id: uuid(), keyword: keyword, reply: reply };
+      entries.push(item);
+      persist();
+      render();
+      resetForm();
+      syncPushEntry(item);
     }
-    persist();
-    render();
-    resetForm();
   });
 
   render();
+  syncEntriesOnLoad();
 })();

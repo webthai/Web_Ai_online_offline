@@ -6,6 +6,12 @@
 const FIXED_USERNAME = "meen";
 const FIXED_PASSWORD = "5340";
 
+// ---- Google Sheets sync (optional — makes every device see the same data) ---
+// วาง Web app URL ของ Apps Script ที่ deploy แล้วตรงนี้ ไม่ต้องกรอกใหม่ทุกเครื่อง
+const DEFAULT_SCRIPT_URL = "";
+// ต้องตรงกับ SYNC_TOKEN ใน Code.gs ทุกตัวอักษร
+const SYNC_TOKEN = "meen";
+
 // ---- storage keys --------------------------------------------------------
 const LS_KEYS = {
   LOGGED_IN: "aichat_logged_in",
@@ -14,6 +20,7 @@ const LS_KEYS = {
   OFFLINE_DATA: "aichat_offline_data", // array of {id, keyword, reply}
   GEMINI_KEY: "aichat_gemini_key",
   GEMINI_MODEL: "aichat_gemini_model",
+  SCRIPT_URL: "aichat_script_url",
 };
 
 const DEFAULT_GEMINI_MODEL = "gemini-flash-latest";
@@ -79,3 +86,58 @@ function uuid() {
     return v.toString(16);
   });
 }
+
+// ==========================================================================
+// Google Sheets sync — ทำงานเฉพาะตอนออนไลน์ ไม่มีเน็ตก็ใช้แอปได้ปกติ
+// เก็บทุกอย่างในเครื่องก่อนเสมอ (localStorage) แล้วค่อยส่งขึ้น/ดึงลงตอนมีเน็ต
+// ==========================================================================
+function getScriptUrl() {
+  return localStorage.getItem(LS_KEYS.SCRIPT_URL) || DEFAULT_SCRIPT_URL;
+}
+
+function setScriptUrl(url) {
+  localStorage.setItem(LS_KEYS.SCRIPT_URL, url || "");
+}
+
+async function syncBootstrap() {
+  const url = getScriptUrl();
+  if (!url || !navigator.onLine) return null;
+  try {
+    const res = await fetch(url + "?action=bootstrap&token=" + encodeURIComponent(SYNC_TOKEN), { cache: "no-store" });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) {
+    console.warn("ซิงก์ bootstrap ไม่สำเร็จ:", e.message);
+    return null;
+  }
+}
+
+async function syncPost(body) {
+  const url = getScriptUrl();
+  if (!url || !navigator.onLine) return null;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" }, // เลี่ยง CORS preflight ของ Apps Script
+      body: JSON.stringify(Object.assign({ token: SYNC_TOKEN }, body)),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) {
+    console.warn("ซิงก์ไม่สำเร็จ (จะลองใหม่ครั้งหน้าที่มีเน็ต):", e.message);
+    return null;
+  }
+}
+
+function syncPushMessage(msg) {
+  return syncPost({ action: "addMessage", message: msg });
+}
+
+function syncPushEntry(entry) {
+  return syncPost({ action: "upsertEntry", entry: entry });
+}
+
+function syncDeleteEntry(id) {
+  return syncPost({ action: "deleteEntry", id: id });
+}
+
