@@ -53,23 +53,23 @@
   </form>
 </div>
 
-<!-- settings modal: Gemini API key for online mode -->
+<!-- settings modal: Groq API key for online mode -->
 <div class="modal-backdrop hidden" id="settingsModal">
   <div class="modal-card">
     <h2>ตั้งค่า AI ออนไลน์</h2>
     <p class="sub">
-      โหมดออนไลน์ใช้ Gemini API ของ Google (มีโควตาใช้งานฟรี) ใส่ API Key ที่ได้จาก
-      Google AI Studio — คีย์นี้จะถูกเก็บไว้ในเครื่องนี้เท่านั้น ไม่ถูกส่งไปที่ใดนอกจาก Google<br>
+      โหมดออนไลน์ใช้ Groq API (ฟรี ไม่ต้องผูกบัตร) ใส่ API Key ที่ได้จาก
+      console.groq.com — คีย์นี้จะถูกเก็บไว้ในเครื่องนี้เท่านั้น ไม่ถูกส่งไปที่ใดนอกจาก Groq<br>
       ถ้าใส่ Apps Script URL ไว้ด้วย แชทและข้อมูลออฟไลน์จะซิงก์ขึ้น Google Sheets
       อัตโนมัติเมื่อมีเน็ต ทำให้ทุกเครื่องเห็นข้อมูลตรงกัน
     </p>
     <div class="field">
-      <label for="apiKeyInput">Gemini API Key</label>
-      <input id="apiKeyInput" type="password" placeholder="AIza..." autocapitalize="off" autocorrect="off" />
+      <label for="apiKeyInput">Groq API Key</label>
+      <input id="apiKeyInput" type="password" placeholder="gsk_..." autocapitalize="off" autocorrect="off" />
     </div>
     <div class="field">
       <label for="modelInput">ชื่อโมเดล</label>
-      <input id="modelInput" type="text" placeholder="gemini-flash-latest" autocapitalize="off" autocorrect="off" />
+      <input id="modelInput" type="text" placeholder="llama-3.3-70b-versatile" autocapitalize="off" autocorrect="off" />
     </div>
     <div class="field">
       <label for="scriptUrlInput">Apps Script URL (ซิงก์ข้อมูลข้ามเครื่อง)</label>
