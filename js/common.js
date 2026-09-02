@@ -12,11 +12,11 @@ const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyw8pLiBWa20
 // ต้องตรงกับ SYNC_TOKEN ใน Code.gs ทุกตัวอักษร
 const SYNC_TOKEN = "meen";
 
-// ค่าเริ่มต้นของ Gemini API Key (โหมดออนไลน์) — เว้นว่างไว้โดยตั้งใจ
+// ค่าเริ่มต้นของ Groq API Key (โหมดออนไลน์) — เว้นว่างไว้โดยตั้งใจ
 // เพราะไฟล์นี้จะถูก push ขึ้น public GitHub repo ถ้าใส่คีย์จริงลงตรงนี้
 // คีย์จะถูกมองเห็นได้จากใครก็ตามที่ดูซอร์สโค้ด (GitHub เองก็บล็อกการ push แบบนี้)
 // ให้กรอกคีย์ในหน้าตั้งค่าของแอปแทน จะถูกเก็บไว้ใน localStorage ของเครื่องนั้นเท่านั้น
-const DEFAULT_GEMINI_KEY = "";
+const DEFAULT_GROQ_KEY = "";
 
 // ---- storage keys --------------------------------------------------------
 const LS_KEYS = {
@@ -24,12 +24,12 @@ const LS_KEYS = {
   MODE: "aichat_mode", // "online" | "offline"
   CHAT_HISTORY: "aichat_history",
   OFFLINE_DATA: "aichat_offline_data", // array of {id, keyword, reply}
-  GEMINI_KEY: "aichat_gemini_key",
-  GEMINI_MODEL: "aichat_gemini_model",
+  GROQ_KEY: "aichat_groq_key",
+  GROQ_MODEL: "aichat_groq_model",
   SCRIPT_URL: "aichat_script_url",
 };
 
-const DEFAULT_GEMINI_MODEL = "gemini-3.6-flash";
+const DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile";
 
 // ---- auth guard ------------------------------------------------------
 function requireLogin() {
@@ -105,8 +105,8 @@ function setScriptUrl(url) {
   localStorage.setItem(LS_KEYS.SCRIPT_URL, url || "");
 }
 
-function getGeminiKey() {
-  return localStorage.getItem(LS_KEYS.GEMINI_KEY) || DEFAULT_GEMINI_KEY;
+function getGroqKey() {
+  return localStorage.getItem(LS_KEYS.GROQ_KEY) || DEFAULT_GROQ_KEY;
 }
 
 async function syncBootstrap() {

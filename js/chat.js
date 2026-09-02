@@ -168,8 +168,8 @@ requireLogin();
 
   // ---- settings modal -------------------------------------------------------
   function openSettings() {
-    apiKeyInput.value = getGeminiKey();
-    modelInput.value = localStorage.getItem(LS_KEYS.GEMINI_MODEL) || DEFAULT_GEMINI_MODEL;
+    apiKeyInput.value = getGroqKey();
+    modelInput.value = localStorage.getItem(LS_KEYS.GROQ_MODEL) || DEFAULT_GROQ_MODEL;
     scriptUrlInput.value = getScriptUrl();
     settingsError.textContent = "";
     settingsModal.classList.remove("hidden");
@@ -184,13 +184,13 @@ requireLogin();
   });
   saveSettingsBtn.addEventListener("click", function () {
     const key = apiKeyInput.value.trim();
-    const model = modelInput.value.trim() || DEFAULT_GEMINI_MODEL;
+    const model = modelInput.value.trim() || DEFAULT_GROQ_MODEL;
     if (!key) {
       settingsError.textContent = "กรุณาใส่ API Key";
       return;
     }
-    localStorage.setItem(LS_KEYS.GEMINI_KEY, key);
-    localStorage.setItem(LS_KEYS.GEMINI_MODEL, model);
+    localStorage.setItem(LS_KEYS.GROQ_KEY, key);
+    localStorage.setItem(LS_KEYS.GROQ_MODEL, model);
     setScriptUrl(scriptUrlInput.value.trim());
     closeSettings();
     if (navigator.onLine) {
@@ -217,42 +217,37 @@ requireLogin();
     return hit ? hit.reply : null;
   }
 
-  // ---- online AI (Gemini) -----------------------------------------------
-  async function callGemini(userText) {
-    const apiKey = getGeminiKey();
-    const model = localStorage.getItem(LS_KEYS.GEMINI_MODEL) || DEFAULT_GEMINI_MODEL;
+  // ---- online AI (Groq — free tier, OpenAI-compatible) -----------------------
+  async function callGroq(userText) {
+    const apiKey = getGroqKey();
+    const model = localStorage.getItem(LS_KEYS.GROQ_MODEL) || DEFAULT_GROQ_MODEL;
     if (!apiKey) {
       openSettings();
-      throw new Error("ยังไม่ได้ตั้งค่า API Key — กรุณาใส่ Gemini API Key ในหน้าตั้งค่า");
+      throw new Error("ยังไม่ได้ตั้งค่า API Key — กรุณาใส่ Groq API Key ในหน้าตั้งค่า");
     }
 
     // send a short window of recent turns for context
     const recent = history.slice(-10);
-    const contents = recent.map(function (m) {
-      return {
-        role: m.role === "user" ? "user" : "model",
-        parts: [{ text: m.text }],
-      };
+    const messages = recent.map(function (m) {
+      return { role: m.role === "user" ? "user" : "assistant", content: m.text };
     });
-    contents.push({ role: "user", parts: [{ text: userText }] });
+    messages.push({ role: "user", content: userText });
 
-    const url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent";
-    const res = await fetch(url, {
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-goog-api-key": apiKey,
+        Authorization: "Bearer " + apiKey,
       },
-      body: JSON.stringify({ contents: contents }),
+      body: JSON.stringify({ model: model, messages: messages }),
     });
 
     const json = await res.json();
     if (!res.ok) {
-      const msg = (json && json.error && json.error.message) || ("เรียก Gemini API ไม่สำเร็จ (HTTP " + res.status + ")");
+      const msg = (json && json.error && json.error.message) || ("เรียก Groq API ไม่สำเร็จ (HTTP " + res.status + ")");
       throw new Error(msg);
     }
-    const candidate = json.candidates && json.candidates[0];
-    const text = candidate && candidate.content && candidate.content.parts && candidate.content.parts[0] && candidate.content.parts[0].text;
+    const text = json.choices && json.choices[0] && json.choices[0].message && json.choices[0].message.content;
     if (!text) throw new Error("AI ไม่ได้ส่งข้อความตอบกลับมา ลองใหม่อีกครั้ง");
     return text.trim();
   }
@@ -292,12 +287,12 @@ requireLogin();
       return;
     }
 
-    // online mode: call Gemini
+    // online mode: call Groq
     busy = true;
     sendBtn.disabled = true;
     const thinkingRow = appendBubble("ai", "กำลังพิมพ์...", nowBangkokLabel());
     try {
-      const reply = await callGemini(text);
+      const reply = await callGroq(text);
       thinkingRow.remove();
       pushMessage("ai", reply);
     } catch (err) {
