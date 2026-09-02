@@ -59,7 +59,9 @@
     <h2>ตั้งค่า AI ออนไลน์</h2>
     <p class="sub">
       โหมดออนไลน์ใช้ Gemini API ของ Google (มีโควตาใช้งานฟรี) ใส่ API Key ที่ได้จาก
-      Google AI Studio — คีย์นี้จะถูกเก็บไว้ในเครื่องนี้เท่านั้น ไม่ถูกส่งไปที่ใดนอกจาก Google
+      Google AI Studio — คีย์นี้จะถูกเก็บไว้ในเครื่องนี้เท่านั้น ไม่ถูกส่งไปที่ใดนอกจาก Google<br>
+      ถ้าใส่ Apps Script URL ไว้ด้วย แชทและข้อมูลออฟไลน์จะซิงก์ขึ้น Google Sheets
+      อัตโนมัติเมื่อมีเน็ต ทำให้ทุกเครื่องเห็นข้อมูลตรงกัน
     </p>
     <div class="field">
       <label for="apiKeyInput">Gemini API Key</label>
@@ -68,6 +70,10 @@
     <div class="field">
       <label for="modelInput">ชื่อโมเดล</label>
       <input id="modelInput" type="text" placeholder="gemini-flash-latest" autocapitalize="off" autocorrect="off" />
+    </div>
+    <div class="field">
+      <label for="scriptUrlInput">Apps Script URL (ซิงก์ข้อมูลข้ามเครื่อง)</label>
+      <input id="scriptUrlInput" type="text" placeholder="https://script.google.com/macros/s/…/exec" autocapitalize="off" autocorrect="off" />
     </div>
     <div class="error-text" id="settingsError"></div>
     <div class="modal-actions">
