@@ -29,7 +29,7 @@ const LS_KEYS = {
   SCRIPT_URL: "aichat_script_url",
 };
 
-const DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile";
+const DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b";
 
 // ---- auth guard ------------------------------------------------------
 function requireLogin() {
