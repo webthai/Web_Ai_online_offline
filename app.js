@@ -6,7 +6,7 @@
  * (Can still be overridden per-device via the "ตั้งค่า URL เซิร์ฟเวอร์"
  * link on the login screen — that override is stored in localStorage.)
  * ============================================================ */
-const DEFAULT_SCRIPT_URL = ''; // e.g. 'https://script.google.com/macros/s/AKfycb.../exec'
+const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyw8pLiBWa20gW6XvYn7ijXbe3ugLSzJNC7s_y_X_UOMEYd_tV6xe4sm8XGFCI-gR2XxQ/exec'; // e.g. 'https://script.google.com/macros/s/AKfycb.../exec'
 
 const DB_NAME = 'offlineAIChatDB';
 const DB_VERSION = 1;
