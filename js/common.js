@@ -29,7 +29,21 @@ const LS_KEYS = {
   SCRIPT_URL: "aichat_script_url",
 };
 
+// โมเดลปัจจุบันที่ใช้เป็นค่าเริ่มต้น
 const DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b";
+
+// รายชื่อโมเดลที่ Groq เลิกให้บริการแล้ว — ถ้าเจอค่านี้ค้างอยู่ใน localStorage ของเครื่องไหน
+// (จากการเคยกดบันทึกค่าตั้งค่าไว้ก่อนหน้านี้) จะถูกล้างทิ้งและสลับไปใช้ DEFAULT_GROQ_MODEL ให้อัตโนมัติ
+// โดยไม่ต้องให้ผู้ใช้เข้าไปกดบันทึกใหม่เอง — เวลา Groq เลิกใช้โมเดลตัวไหนอีกในอนาคต แค่เติมชื่อเข้าลิสต์นี้พอ
+const DEPRECATED_GROQ_MODELS = [
+  "llama-3.3-70b-versatile",
+  "llama-3.1-8b-instant",
+  "llama3-70b-8192",
+  "llama3-8b-8192",
+  "gemma2-9b-it",
+  "qwen/qwen3-32b",
+  "meta-llama/llama-4-scout-17b-16e-instruct",
+];
 
 // ---- auth guard ------------------------------------------------------
 function requireLogin() {
@@ -93,6 +107,18 @@ function uuid() {
   });
 }
 
+// ---- Groq model helper ---------------------------------------------------
+// อ่านชื่อโมเดล Groq ที่จะใช้จริง: ถ้าค่าที่เคยบันทึกไว้ใน localStorage เป็นโมเดลที่เลิกใช้แล้ว
+// จะล้างทิ้งอัตโนมัติแล้วคืนค่า DEFAULT_GROQ_MODEL แทน — ทำให้ทุกเครื่องสลับไปใช้โมเดลใหม่เองโดยไม่ต้องกดบันทึกซ้ำ
+function getGroqModel() {
+  const stored = localStorage.getItem(LS_KEYS.GROQ_MODEL);
+  if (stored && DEPRECATED_GROQ_MODELS.indexOf(stored) !== -1) {
+    localStorage.removeItem(LS_KEYS.GROQ_MODEL);
+    return DEFAULT_GROQ_MODEL;
+  }
+  return stored || DEFAULT_GROQ_MODEL;
+}
+
 // ==========================================================================
 // Google Sheets sync — ทำงานเฉพาะตอนออนไลน์ ไม่มีเน็ตก็ใช้แอปได้ปกติ
 // เก็บทุกอย่างในเครื่องก่อนเสมอ (localStorage) แล้วค่อยส่งขึ้น/ดึงลงตอนมีเน็ต
@@ -150,4 +176,3 @@ function syncPushEntry(entry) {
 function syncDeleteEntry(id) {
   return syncPost({ action: "deleteEntry", id: id });
 }
-
