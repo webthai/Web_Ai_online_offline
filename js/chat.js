@@ -200,21 +200,40 @@ requireLogin();
   });
 
   // ---- offline keyword matching ---------------------------------------------
+  // ลำดับการ match:
+  //   1) ตรงกันเป๊ะ (exact) — ถ้าเจอ ใช้ชุดนี้อย่างเดียว เพราะแม่นยำที่สุด
+  //   2) match แบบสองทาง — ข้อความที่พิมพ์มีคีย์เวิร์ดแฝงอยู่ (แบบเดิม)
+  //      หรือคีย์เวิร์ดมีข้อความที่พิมพ์แฝงอยู่ (ใหม่ — ทำให้คำสั้น ๆ เช่น
+  //      "key" match กับคีย์เวิร์ดยาวอย่าง "Api Key" ได้ด้วย)
+  //      กันคำพิมพ์ที่สั้นกว่า 2 ตัวอักษรไม่ให้ไปเทียบทางนี้ เพื่อไม่ให้ match มั่ว
+  //   3) ถ้า match ได้มากกว่า 1 รายการ รวมทุกคำตอบเข้าเป็นคำตอบเดียว
+  //      โดยขึ้นต้นแต่ละส่วนด้วยชื่อคีย์เวิร์ดของมัน
   function findOfflineReply(text) {
     const data = readJson(LS_KEYS.OFFLINE_DATA, []);
     const norm = text.trim().toLowerCase();
     if (!norm || data.length === 0) return null;
 
-    let hit = data.find(function (d) {
+    const exactHits = data.filter(function (d) {
       return d.keyword.trim().toLowerCase() === norm;
     });
-    if (!hit) {
-      hit = data.find(function (d) {
-        const k = d.keyword.trim().toLowerCase();
-        return k.length > 0 && norm.indexOf(k) !== -1;
-      });
+    if (exactHits.length > 0) {
+      return exactHits.map(function (d) { return d.reply; }).join("\n\n");
     }
-    return hit ? hit.reply : null;
+
+    const partialHits = data.filter(function (d) {
+      const k = d.keyword.trim().toLowerCase();
+      if (!k) return false;
+      const messageContainsKeyword = norm.indexOf(k) !== -1;
+      const keywordContainsMessage = norm.length >= 2 && k.indexOf(norm) !== -1;
+      return messageContainsKeyword || keywordContainsMessage;
+    });
+
+    if (partialHits.length === 0) return null;
+    if (partialHits.length === 1) return partialHits[0].reply;
+
+    return partialHits
+      .map(function (d) { return d.keyword.trim() + ": " + d.reply; })
+      .join("\n\n");
   }
 
   // ---- online AI (Groq — free tier, OpenAI-compatible) -----------------------
