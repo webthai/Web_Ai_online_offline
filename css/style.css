@@ -583,8 +583,50 @@ a:focus {
   color: var(--text-primary);
 }
 
+/* -------------------------------------------------------------------- */
+/* Narrow screens (e.g. iPhone 6s @ 375pt) — keep the topbar from        */
+/* overflowing and forcing horizontal scroll                            */
+/* -------------------------------------------------------------------- */
+
 @media (max-width: 480px) {
   .topbar .title {
     display: none;
+  }
+
+  .status-pill {
+    padding: 6px;
+    gap: 0;
+  }
+
+  .status-pill #statusLabel {
+    display: none;
+  }
+
+  .mode-toggle button {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  .btn-icon {
+    padding: 7px 8px;
+    font-size: 12px;
+  }
+
+  #logoutBtn {
+    font-size: 0;
+  }
+
+  #logoutBtn::before {
+    content: "⎋";
+    font-size: 14px;
+  }
+
+  .topbar {
+    gap: 6px;
+    padding: 8px 10px;
+  }
+
+  .topbar-actions {
+    gap: 6px;
   }
 }
