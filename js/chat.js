@@ -18,6 +18,7 @@ requireLogin();
   const composerForm = document.getElementById("composerForm");
   const msgInput = document.getElementById("msgInput");
   const sendBtn = document.getElementById("sendBtn");
+  const micBtn = document.getElementById("micBtn");
 
   const settingsModal = document.getElementById("settingsModal");
   const apiKeyInput = document.getElementById("apiKeyInput");
@@ -26,11 +27,17 @@ requireLogin();
   const settingsError = document.getElementById("settingsError");
   const closeSettingsBtn = document.getElementById("closeSettingsBtn");
   const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+  const lastSyncedLabel = document.getElementById("lastSyncedLabel");
+  const clearChatBtn = document.getElementById("clearChatBtn");
 
   // ---- state --------------------------------------------------------------
   let history = readJson(LS_KEYS.CHAT_HISTORY, []); // [{id, role, text, time, ts, synced}]
   let mode = localStorage.getItem(LS_KEYS.MODE) || (navigator.onLine ? "online" : "offline");
   let busy = false;
+  let currentAudio = null;
+  let mediaRecorder = null;
+  let recordedChunks = [];
+  let isRecording = false;
 
   // ---- render history on load ---------------------------------------------
   function renderAll() {
@@ -45,13 +52,42 @@ requireLogin();
 
   function appendBubble(role, text, time, doScroll) {
     if (emptyState.parentNode === chatWindow) chatWindow.removeChild(emptyState);
+
     const row = document.createElement("div");
     row.className = "bubble-row " + (role === "user" ? "from-user" : "from-ai");
+
+    const wrap = document.createElement("div");
+    wrap.className = "bubble-wrap";
+
     const bubble = document.createElement("div");
     bubble.className = "bubble";
     bubble.innerHTML = escapeHtml(text).replace(/\n/g, "<br>") +
       '<span class="bubble-meta">' + escapeHtml(time) + "</span>";
-    row.appendChild(bubble);
+    wrap.appendChild(bubble);
+
+    const actions = document.createElement("div");
+    actions.className = "bubble-actions";
+
+    const copyBtn = document.createElement("button");
+    copyBtn.type = "button";
+    copyBtn.textContent = "คัดลอก";
+    copyBtn.addEventListener("click", function () {
+      copyTextToClipboard(text);
+    });
+    actions.appendChild(copyBtn);
+
+    if (role === "ai") {
+      const ttsBtn = document.createElement("button");
+      ttsBtn.type = "button";
+      ttsBtn.textContent = "🔊 ฟัง";
+      ttsBtn.addEventListener("click", function () {
+        playAiSpeech(text, ttsBtn);
+      });
+      actions.appendChild(ttsBtn);
+    }
+
+    wrap.appendChild(actions);
+    row.appendChild(wrap);
     chatWindow.appendChild(row);
     if (doScroll !== false) scrollToBottom();
     return row;
@@ -59,6 +95,47 @@ requireLogin();
 
   function scrollToBottom() {
     chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+
+  function copyTextToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard
+        .writeText(text)
+        .then(function () {
+          showToast("คัดลอกแล้ว");
+        })
+        .catch(function () {
+          showToast("คัดลอกไม่สำเร็จ", "error");
+        });
+    } else {
+      showToast("เบราว์เซอร์นี้ไม่รองรับการคัดลอกอัตโนมัติ", "error");
+    }
+  }
+
+  async function playAiSpeech(text, btn) {
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio = null;
+    }
+    const apiKey = getGroqKey();
+    if (!apiKey) {
+      openSettings();
+      showToast("ยังไม่ได้ตั้งค่า Groq API Key", "error");
+      return;
+    }
+    const originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "กำลังโหลดเสียง...";
+    try {
+      const url = await callGroqTTS(text);
+      currentAudio = new Audio(url);
+      currentAudio.play();
+    } catch (err) {
+      showToast("เล่นเสียงไม่สำเร็จ: " + err.message, "error");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+    }
   }
 
   function pushMessage(role, text, opts) {
@@ -110,13 +187,18 @@ requireLogin();
   }
 
   function retryUnsyncedMessages() {
-    history.filter(function (m) { return !m.synced; }).forEach(function (m) {
-      syncPushMessage(m).then(function (res) {
-        if (res && res.ok) {
-          m.synced = true;
-          writeJson(LS_KEYS.CHAT_HISTORY, history);
-        }
-      });
+    const pending = history.filter(function (m) { return !m.synced; });
+    if (pending.length === 0) return;
+    Promise.all(
+      pending.map(function (m) {
+        return syncPushMessage(m).then(function (res) {
+          if (res && res.ok) m.synced = true;
+        });
+      })
+    ).then(function () {
+      writeJson(LS_KEYS.CHAT_HISTORY, history);
+      const stillPending = history.some(function (m) { return !m.synced; });
+      if (!stillPending) showToast("ซิงก์ข้อความที่ค้างอยู่สำเร็จ");
     });
   }
 
@@ -168,6 +250,7 @@ requireLogin();
     modelInput.value = getGroqModel();
     scriptUrlInput.value = getScriptUrl();
     settingsError.textContent = "";
+    if (lastSyncedLabel) lastSyncedLabel.textContent = "ซิงก์ล่าสุด: " + getLastSyncLabel();
     settingsModal.classList.remove("hidden");
   }
   function closeSettings() {
@@ -194,6 +277,19 @@ requireLogin();
       syncChatOnLoad();
     }
   });
+
+  if (clearChatBtn) {
+    clearChatBtn.addEventListener("click", function () {
+      if (!confirm("ล้างแชททั้งหมดในเครื่องนี้?\n(ข้อมูลใน Google Sheets จะไม่ถูกลบ ถ้าเปิดจากเครื่องอื่นที่ซิงก์ไว้จะยังเห็นแชทเดิมอยู่)")) {
+        return;
+      }
+      history = [];
+      writeJson(LS_KEYS.CHAT_HISTORY, history);
+      renderAll();
+      closeSettings();
+      showToast("ล้างแชทแล้ว (ในเครื่องนี้เท่านั้น)");
+    });
+  }
 
   // ---- offline keyword matching ---------------------------------------------
   // ลำดับการ match:
@@ -233,7 +329,7 @@ requireLogin();
   }
 
   // ---- online AI (Groq — free tier, OpenAI-compatible) -----------------------
-  async function callGroq(userText) {
+  async function callGroq(userText, isRetry) {
     const apiKey = getGroqKey();
     const model = getGroqModel();
     if (!apiKey) {
@@ -257,6 +353,13 @@ requireLogin();
       body: JSON.stringify({ model: model, messages: messages }),
     });
 
+    // โดนจำกัดอัตราการใช้งาน (rate limit) — รอสักครู่แล้วลองใหม่ให้อัตโนมัติ 1 ครั้ง
+    if (res.status === 429 && !isRetry) {
+      showToast("ใช้งานถี่ไปหน่อย รอสักครู่แล้วลองใหม่ให้อัตโนมัติ...");
+      await new Promise(function (resolve) { setTimeout(resolve, 3000); });
+      return callGroq(userText, true);
+    }
+
     const json = await res.json();
     if (!res.ok) {
       const msg = (json && json.error && json.error.message) || ("เรียก Groq API ไม่สำเร็จ (HTTP " + res.status + ")");
@@ -265,6 +368,65 @@ requireLogin();
     const text = json.choices && json.choices[0] && json.choices[0].message && json.choices[0].message.content;
     if (!text) throw new Error("AI ไม่ได้ส่งข้อความตอบกลับมา ลองใหม่อีกครั้ง");
     return text.trim();
+  }
+
+  // ---- speech-to-text (mic button: click to start, click again to stop) -----
+  async function toggleRecording() {
+    if (!isRecording) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        recordedChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = function (e) {
+          if (e.data && e.data.size > 0) recordedChunks.push(e.data);
+        };
+        mediaRecorder.onstop = function () {
+          stream.getTracks().forEach(function (t) { t.stop(); });
+          const blob = new Blob(recordedChunks, { type: "audio/webm" });
+          transcribeAndFill(blob);
+        };
+        mediaRecorder.start();
+        isRecording = true;
+        micBtn.classList.add("recording");
+      } catch (err) {
+        showToast("ขอสิทธิ์ใช้ไมโครโฟนไม่สำเร็จ", "error");
+      }
+    } else {
+      isRecording = false;
+      micBtn.classList.remove("recording");
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+      }
+    }
+  }
+
+  async function transcribeAndFill(blob) {
+    const apiKey = getGroqKey();
+    if (!apiKey) {
+      openSettings();
+      showToast("ยังไม่ได้ตั้งค่า Groq API Key", "error");
+      return;
+    }
+    micBtn.disabled = true;
+    showToast("กำลังถอดเสียง...");
+    try {
+      const text = await callGroqSTT(blob);
+      if (text) {
+        msgInput.value = msgInput.value ? msgInput.value + " " + text : text;
+        autoResize();
+        msgInput.focus();
+      } else {
+        showToast("ไม่ได้ยินเสียงพูด ลองใหม่อีกครั้ง", "error");
+      }
+    } catch (err) {
+      showToast("ถอดเสียงไม่สำเร็จ: " + err.message, "error");
+    } finally {
+      micBtn.disabled = false;
+    }
+  }
+
+  if (micBtn) {
+    micBtn.addEventListener("click", toggleRecording);
   }
 
   // ---- send flow -------------------------------------------------------

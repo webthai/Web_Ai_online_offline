@@ -584,6 +584,152 @@ a:focus {
 }
 
 /* -------------------------------------------------------------------- */
+/* Bubble actions (copy / listen)                                        */
+/* -------------------------------------------------------------------- */
+
+.bubble-wrap {
+  display: flex;
+  flex-direction: column;
+  max-width: 78%;
+}
+
+.bubble-row.from-user .bubble-wrap {
+  align-items: flex-end;
+}
+
+.bubble-row.from-ai .bubble-wrap {
+  align-items: flex-start;
+}
+
+.bubble-wrap .bubble {
+  max-width: 100%;
+}
+
+.bubble-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+  padding: 0 4px;
+}
+
+.bubble-actions button {
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.bubble-actions button:hover {
+  color: var(--text-muted);
+}
+
+.bubble-actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* -------------------------------------------------------------------- */
+/* Mic button (speech-to-text)                                          */
+/* -------------------------------------------------------------------- */
+
+.composer .mic-btn {
+  flex: 0 0 auto;
+  background: var(--bg-surface-2);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  width: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.composer .mic-btn.recording {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+  animation: micPulse 1.2s ease-in-out infinite;
+}
+
+.composer .mic-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes micPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(229, 72, 77, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(229, 72, 77, 0);
+  }
+}
+
+/* -------------------------------------------------------------------- */
+/* Toast notifications                                                  */
+/* -------------------------------------------------------------------- */
+
+#aichatToast {
+  position: fixed;
+  left: 50%;
+  bottom: 90px;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--bg-surface-3);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 13px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 50;
+  max-width: 90vw;
+  text-align: center;
+}
+
+#aichatToast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+#aichatToast.toast-error {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* -------------------------------------------------------------------- */
+/* Danger button + sync status line (settings modal)                    */
+/* -------------------------------------------------------------------- */
+
+.btn-danger {
+  appearance: none;
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  width: 100%;
+  padding: 12px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 14px;
+}
+
+.btn-danger:active {
+  transform: scale(0.98);
+}
+
+.sync-status {
+  font-size: 12px;
+  color: var(--text-faint);
+  margin: 12px 0 0;
+}
+
+/* -------------------------------------------------------------------- */
 /* Narrow screens (e.g. iPhone 6s @ 375pt) — keep the topbar from        */
 /* overflowing and forcing horizontal scroll                            */
 /* -------------------------------------------------------------------- */

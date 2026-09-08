@@ -27,6 +27,7 @@ const LS_KEYS = {
   GROQ_KEY: "aichat_groq_key",
   GROQ_MODEL: "aichat_groq_model",
   SCRIPT_URL: "aichat_script_url",
+  LAST_SYNC: "aichat_last_sync",
 };
 
 // โมเดลปัจจุบันที่ใช้เป็นค่าเริ่มต้น
@@ -44,6 +45,13 @@ const DEPRECATED_GROQ_MODELS = [
   "qwen/qwen3-32b",
   "meta-llama/llama-4-scout-17b-16e-instruct",
 ];
+
+// โมเดล TTS/STT ของ Groq
+// หมายเหตุสำคัญ: TTS (Orpheus) รองรับแค่เสียงภาษาอังกฤษ/อาหรับเท่านั้น ไม่มีเสียงไทย
+// ข้อความภาษาไทยจะออกเสียงเพี้ยน เหมาะกับคำตอบที่เป็นอังกฤษล้วนเท่านั้น
+const TTS_MODEL = "canopylabs/orpheus-v1-english";
+const TTS_VOICE = "hannah";
+const STT_MODEL = "whisper-large-v3-turbo"; // รองรับหลายภาษารวมถึงไทย
 
 // ---- auth guard ------------------------------------------------------
 function requireLogin() {
@@ -107,6 +115,25 @@ function uuid() {
   });
 }
 
+// ---- Toast notifications --------------------------------------------------
+// ใช้ได้จากทุกหน้า (index.html, ai.html, data.html) เพราะโหลด common.js ร่วมกัน
+// สร้าง element ให้เองอัตโนมัติ ไม่ต้องเตรียม HTML ล่วงหน้า
+let toastTimer = null;
+function showToast(message, type) {
+  let el = document.getElementById("aichatToast");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "aichatToast";
+    document.body.appendChild(el);
+  }
+  el.textContent = message;
+  el.className = "toast toast-" + (type || "info") + " show";
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () {
+    el.classList.remove("show");
+  }, 2800);
+}
+
 // ---- Groq model helper ---------------------------------------------------
 // อ่านชื่อโมเดล Groq ที่จะใช้จริง: ถ้าค่าที่เคยบันทึกไว้ใน localStorage เป็นโมเดลที่เลิกใช้แล้ว
 // จะล้างทิ้งอัตโนมัติแล้วคืนค่า DEFAULT_GROQ_MODEL แทน — ทำให้ทุกเครื่องสลับไปใช้โมเดลใหม่เองโดยไม่ต้องกดบันทึกซ้ำ
@@ -117,6 +144,71 @@ function getGroqModel() {
     return DEFAULT_GROQ_MODEL;
   }
   return stored || DEFAULT_GROQ_MODEL;
+}
+
+function getGroqKey() {
+  return localStorage.getItem(LS_KEYS.GROQ_KEY) || DEFAULT_GROQ_KEY;
+}
+
+// ---- Groq Text-to-Speech ---------------------------------------------------
+// หมายเหตุ: รองรับแค่เสียงภาษาอังกฤษ/อาหรับ — ข้อความไทยจะออกเสียงเพี้ยน
+// คืนค่าเป็น object URL ของไฟล์เสียง (ใช้กับ `new Audio(url)` เล่นได้เลย)
+async function callGroqTTS(text) {
+  const apiKey = getGroqKey();
+  if (!apiKey) throw new Error("ยังไม่ได้ตั้งค่า Groq API Key");
+
+  const res = await fetch("https://api.groq.com/openai/v1/audio/speech", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + apiKey,
+    },
+    body: JSON.stringify({
+      model: TTS_MODEL,
+      voice: TTS_VOICE,
+      input: text,
+      response_format: "mp3",
+    }),
+  });
+
+  if (!res.ok) {
+    let msg = "แปลงข้อความเป็นเสียงไม่สำเร็จ (HTTP " + res.status + ")";
+    try {
+      const j = await res.json();
+      if (j && j.error && j.error.message) msg = j.error.message;
+    } catch (e) {
+      // response ไม่ใช่ JSON ก็ใช้ข้อความ default ต่อไป
+    }
+    throw new Error(msg);
+  }
+
+  const blob = await res.blob();
+  return URL.createObjectURL(blob);
+}
+
+// ---- Groq Speech-to-Text (Whisper) -----------------------------------------
+// รับ Blob เสียงที่อัดจาก MediaRecorder แล้วส่งไปถอดเป็นข้อความ (รองรับไทย)
+async function callGroqSTT(audioBlob) {
+  const apiKey = getGroqKey();
+  if (!apiKey) throw new Error("ยังไม่ได้ตั้งค่า Groq API Key");
+
+  const form = new FormData();
+  form.append("file", audioBlob, "voice.webm");
+  form.append("model", STT_MODEL);
+  form.append("language", "th");
+
+  const res = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+    method: "POST",
+    headers: { Authorization: "Bearer " + apiKey },
+    body: form,
+  });
+
+  const json = await res.json();
+  if (!res.ok) {
+    const msg = (json && json.error && json.error.message) || ("ถอดเสียงไม่สำเร็จ (HTTP " + res.status + ")");
+    throw new Error(msg);
+  }
+  return (json.text || "").trim();
 }
 
 // ==========================================================================
@@ -131,8 +223,14 @@ function setScriptUrl(url) {
   localStorage.setItem(LS_KEYS.SCRIPT_URL, url || "");
 }
 
-function getGroqKey() {
-  return localStorage.getItem(LS_KEYS.GROQ_KEY) || DEFAULT_GROQ_KEY;
+function markSyncedNow() {
+  localStorage.setItem(LS_KEYS.LAST_SYNC, String(Date.now()));
+}
+
+function getLastSyncLabel() {
+  const ts = localStorage.getItem(LS_KEYS.LAST_SYNC);
+  if (!ts) return "ยังไม่เคยซิงก์";
+  return fullBangkokLabel(new Date(Number(ts)));
 }
 
 async function syncBootstrap() {
@@ -141,7 +239,9 @@ async function syncBootstrap() {
   try {
     const res = await fetch(url + "?action=bootstrap&token=" + encodeURIComponent(SYNC_TOKEN), { cache: "no-store" });
     if (!res.ok) return null;
-    return await res.json();
+    const data = await res.json();
+    markSyncedNow();
+    return data;
   } catch (e) {
     console.warn("ซิงก์ bootstrap ไม่สำเร็จ:", e.message);
     return null;
@@ -158,7 +258,9 @@ async function syncPost(body) {
       body: JSON.stringify(Object.assign({ token: SYNC_TOKEN }, body)),
     });
     if (!res.ok) return null;
-    return await res.json();
+    const data = await res.json();
+    if (data && data.ok) markSyncedNow();
+    return data;
   } catch (e) {
     console.warn("ซิงก์ไม่สำเร็จ (จะลองใหม่ครั้งหน้าที่มีเน็ต):", e.message);
     return null;
