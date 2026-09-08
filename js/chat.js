@@ -30,7 +30,6 @@ requireLogin();
   // ---- state --------------------------------------------------------------
   let history = readJson(LS_KEYS.CHAT_HISTORY, []); // [{id, role, text, time, ts, synced}]
   let mode = localStorage.getItem(LS_KEYS.MODE) || (navigator.onLine ? "online" : "offline");
-  let connectivityForcedOffline = false;
   let busy = false;
 
   // ---- render history on load ---------------------------------------------
@@ -137,13 +136,10 @@ requireLogin();
     statusLabel.textContent = online ? "ออนไลน์" : "ออฟไลน์";
     modeOnlineBtn.disabled = !online;
 
-    if (!online && mode === "online") {
-      connectivityForcedOffline = true;
-      setMode("offline");
-    } else if (online && connectivityForcedOffline) {
-      connectivityForcedOffline = false;
-      setMode("online");
-    }
+    // สลับโหมดให้ตรงกับสถานะเน็ตจริงเสมอ ทุกครั้งที่เน็ตหลุด/กลับมา
+    // (ไม่ต้องกดปุ่มสลับเองอีกต่อไป — ออนไลน์<->ออฟไลน์ ตามเน็ตจริงตลอด)
+    setMode(online ? "online" : "offline");
+
     if (online) retryUnsyncedMessages();
   }
 
