@@ -176,3 +176,17 @@ function syncPushEntry(entry) {
 function syncDeleteEntry(id) {
   return syncPost({ action: "deleteEntry", id: id });
 }
+
+// ==========================================================================
+// Service Worker registration — cache the app shell so ai.html/data.html/
+// index.html (and their css/js) load and work fully offline after the
+// first successful online visit. Registration only; sw.js itself handles
+// the caching strategy (stale-while-revalidate, see sw.js).
+// ==========================================================================
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw.js").catch(function (err) {
+      console.warn("ลงทะเบียน Service Worker ไม่สำเร็จ:", err.message);
+    });
+  });
+}
