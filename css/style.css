@@ -295,6 +295,7 @@ a:focus {
 
 .chat-window {
   flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding: 16px;
@@ -463,6 +464,7 @@ a:focus {
 
 .data-body {
   flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding: 16px;
