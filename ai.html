@@ -81,12 +81,17 @@
       <label for="scriptUrlInput">Apps Script URL (ซิงก์ข้อมูลข้ามเครื่อง)</label>
       <input id="scriptUrlInput" type="text" placeholder="https://script.google.com/macros/s/…/exec" autocapitalize="off" autocorrect="off" />
     </div>
+    <div class="field">
+      <label for="autoDeleteInput">ลบข้อความเก่ากว่า (วัน) — เว้นว่างหรือ 0 = ไม่ลบอัตโนมัติ</label>
+      <input id="autoDeleteInput" type="number" min="0" placeholder="เช่น 30" />
+    </div>
     <p class="sync-status" id="lastSyncedLabel">ซิงก์ล่าสุด: —</p>
     <div class="error-text" id="settingsError"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" id="closeSettingsBtn" type="button">ปิด</button>
       <button class="btn btn-primary" id="saveSettingsBtn" type="button">บันทึก</button>
     </div>
+    <button class="btn btn-ghost" id="themeToggleBtn" type="button" style="width:100%; margin-top:10px;">สลับธีมสว่าง/มืด</button>
     <button class="btn btn-danger" id="clearChatBtn" type="button">ล้างแชททั้งหมด (ในเครื่องนี้)</button>
   </div>
 </div>

@@ -29,9 +29,24 @@ requireLogin();
   const saveSettingsBtn = document.getElementById("saveSettingsBtn");
   const lastSyncedLabel = document.getElementById("lastSyncedLabel");
   const clearChatBtn = document.getElementById("clearChatBtn");
+  const themeToggleBtn = document.getElementById("themeToggleBtn");
+  const autoDeleteInput = document.getElementById("autoDeleteInput");
 
   // ---- state --------------------------------------------------------------
   let history = readJson(LS_KEYS.CHAT_HISTORY, []); // [{id, role, text, time, ts, synced}]
+
+  // ลบข้อความที่เก่ากว่าจำนวนวันที่ตั้งไว้ (ถ้าตั้งไว้) ทันทีตอนโหลดหน้า
+  // กันไม่ให้ localStorage บวมขึ้นเรื่อย ๆ ในระยะยาว — ปิดใช้งานได้โดยเว้นค่าไว้ที่หน้าตั้งค่า
+  (function pruneOldMessages() {
+    const days = parseInt(localStorage.getItem(LS_KEYS.AUTO_DELETE_DAYS), 10);
+    if (!days || days <= 0) return;
+    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+    const before = history.length;
+    history = history.filter(function (m) { return m.ts >= cutoff; });
+    if (history.length !== before) {
+      writeJson(LS_KEYS.CHAT_HISTORY, history);
+    }
+  })();
   let mode = localStorage.getItem(LS_KEYS.MODE) || (navigator.onLine ? "online" : "offline");
   let busy = false;
   let currentAudio = null;
@@ -245,12 +260,27 @@ requireLogin();
   });
 
   // ---- settings modal -------------------------------------------------------
+  function refreshThemeToggleLabel() {
+    if (!themeToggleBtn) return;
+    themeToggleBtn.textContent = getTheme() === "light" ? "สลับเป็นธีมมืด" : "สลับเป็นธีมสว่าง";
+  }
+
+  if (themeToggleBtn) {
+    refreshThemeToggleLabel();
+    themeToggleBtn.addEventListener("click", function () {
+      setTheme(getTheme() === "light" ? "dark" : "light");
+      refreshThemeToggleLabel();
+    });
+  }
+
   function openSettings() {
     apiKeyInput.value = getGroqKey();
     modelInput.value = getGroqModel();
     scriptUrlInput.value = getScriptUrl();
     settingsError.textContent = "";
     if (lastSyncedLabel) lastSyncedLabel.textContent = "ซิงก์ล่าสุด: " + getLastSyncLabel();
+    if (autoDeleteInput) autoDeleteInput.value = localStorage.getItem(LS_KEYS.AUTO_DELETE_DAYS) || "";
+    refreshThemeToggleLabel();
     settingsModal.classList.remove("hidden");
   }
   function closeSettings() {
@@ -271,6 +301,14 @@ requireLogin();
     localStorage.setItem(LS_KEYS.GROQ_KEY, key);
     localStorage.setItem(LS_KEYS.GROQ_MODEL, model);
     setScriptUrl(scriptUrlInput.value.trim());
+    if (autoDeleteInput) {
+      const days = autoDeleteInput.value.trim();
+      if (days) {
+        localStorage.setItem(LS_KEYS.AUTO_DELETE_DAYS, days);
+      } else {
+        localStorage.removeItem(LS_KEYS.AUTO_DELETE_DAYS);
+      }
+    }
     closeSettings();
     if (navigator.onLine) {
       retryUnsyncedMessages();

@@ -28,6 +28,8 @@ const LS_KEYS = {
   GROQ_MODEL: "aichat_groq_model",
   SCRIPT_URL: "aichat_script_url",
   LAST_SYNC: "aichat_last_sync",
+  THEME: "aichat_theme", // "dark" | "light"
+  AUTO_DELETE_DAYS: "aichat_auto_delete_days",
 };
 
 // โมเดลปัจจุบันที่ใช้เป็นค่าเริ่มต้น
@@ -43,15 +45,16 @@ const DEPRECATED_GROQ_MODELS = [
   "llama3-8b-8192",
   "gemma2-9b-it",
   "qwen/qwen3-32b",
-  "meta-llama/llama-4-scout-17b-16e-instruct",
+  "meta-llama/llama-4-maverick-17b-128e-instruct", // เลิกใช้ 20 ก.พ. 2026 → ย้ายไป openai/gpt-oss-120b
 ];
 
-// โมเดล TTS/STT ของ Groq
+// โมเดล TTS/STT/Vision ของ Groq
 // หมายเหตุสำคัญ: TTS (Orpheus) รองรับแค่เสียงภาษาอังกฤษ/อาหรับเท่านั้น ไม่มีเสียงไทย
 // ข้อความภาษาไทยจะออกเสียงเพี้ยน เหมาะกับคำตอบที่เป็นอังกฤษล้วนเท่านั้น
 const TTS_MODEL = "canopylabs/orpheus-v1-english";
 const TTS_VOICE = "hannah";
 const STT_MODEL = "whisper-large-v3-turbo"; // รองรับหลายภาษารวมถึงไทย
+const VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"; // รองรับรูปภาพ (ยังไม่ได้เปิดใช้ในแอปตอนนี้)
 
 // ---- auth guard ------------------------------------------------------
 function requireLogin() {
@@ -133,6 +136,24 @@ function showToast(message, type) {
     el.classList.remove("show");
   }, 2800);
 }
+
+// ---- Theme (light / dark) --------------------------------------------------
+// เก็บใน localStorage ตัวเดียว ใช้ร่วมกันทุกหน้า — applyTheme() รันทันทีตอนโหลด
+// สคริปต์นี้ (ก่อน render เสร็จ) เพื่อลดอาการกะพริบสีตอนเปลี่ยนหน้า
+function getTheme() {
+  return localStorage.getItem(LS_KEYS.THEME) || "dark";
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme === "light" ? "light" : "dark");
+}
+
+function setTheme(theme) {
+  localStorage.setItem(LS_KEYS.THEME, theme === "light" ? "light" : "dark");
+  applyTheme(theme);
+}
+
+applyTheme(getTheme());
 
 // ---- Groq model helper ---------------------------------------------------
 // อ่านชื่อโมเดล Groq ที่จะใช้จริง: ถ้าค่าที่เคยบันทึกไว้ใน localStorage เป็นโมเดลที่เลิกใช้แล้ว

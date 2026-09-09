@@ -27,6 +27,21 @@
     "Helvetica Neue", Arial, sans-serif;
 }
 
+/* ธีมสว่าง — เปิดใช้ตอนใส่ data-theme="light" บน <html> (สลับผ่านหน้าตั้งค่า ⚙︎) */
+:root[data-theme="light"] {
+  --bg-base: #f4f5f7;
+  --bg-surface: #ffffff;
+  --bg-surface-2: #eef0f3;
+  --bg-surface-3: #e3e6eb;
+  --border: #d9dce2;
+  --text-primary: #14171c;
+  --text-muted: #545c6a;
+  --text-faint: #8c93a1;
+  --accent: #1f9e85;
+  --accent-strong: #178870;
+  --accent-ink: #ffffff;
+}
+
 * {
   box-sizing: border-box;
 }
