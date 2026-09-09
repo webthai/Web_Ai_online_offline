@@ -237,7 +237,10 @@ requireLogin();
     // (ไม่ต้องกดปุ่มสลับเองอีกต่อไป — ออนไลน์<->ออฟไลน์ ตามเน็ตจริงตลอด)
     setMode(online ? "online" : "offline");
 
-    if (online) retryUnsyncedMessages();
+    if (online) {
+      retryUnsyncedMessages();
+      syncChatOnLoad();
+    }
   }
 
   modeOnlineBtn.addEventListener("click", function () {
@@ -250,6 +253,19 @@ requireLogin();
 
   window.addEventListener("online", updateConnectivityUI);
   window.addEventListener("offline", updateConnectivityUI);
+
+  // เปิดแอปค้างไว้เฉย ๆ ก็ยังดึงแชทจากเครื่องอื่นเข้ามาเรื่อย ๆ ไม่ต้องรีเฟรชเอง:
+  //   - ดึงซ้ำทุก 30 วิ ระหว่างเปิดหน้าค้างไว้ (เบา เพราะ Apps Script แคชไว้ 30 วิอยู่แล้ว)
+  //   - ดึงทันทีเวลาสลับกลับมาที่แท็บ/แอปนี้ (เช่น พิมพ์จากมือถือ แล้วสลับมาดู PC)
+  setInterval(function () {
+    if (navigator.onLine) syncChatOnLoad();
+  }, 30000);
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible" && navigator.onLine) {
+      syncChatOnLoad();
+    }
+  });
 
   dataBtn.addEventListener("click", function () {
     window.location.href = "data.html";
