@@ -113,6 +113,21 @@
   </div>
 </div>
 
+<!-- ช่องกรอกชื่อห้องแชท (ใช้แทน window.prompt() เพราะ prompt() ใช้งานไม่ได้บน iOS
+     ตอนเปิดแบบ "เพิ่มไปหน้าจอโฮม"/standalone) -->
+<div class="modal-backdrop hidden" id="threadNameModal">
+  <div class="modal-card">
+    <h2 id="threadNameModalTitle">ตั้งชื่อห้องแชท</h2>
+    <div class="field">
+      <input id="threadNameInput" type="text" placeholder="ชื่อห้อง" autocapitalize="off" autocorrect="off" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="threadNameCancelBtn" type="button">ยกเลิก</button>
+      <button class="btn btn-primary" id="threadNameConfirmBtn" type="button">ตกลง</button>
+    </div>
+  </div>
+</div>
+
 <script src="js/common.js"></script>
 <script src="js/chat.js"></script>
 </body>

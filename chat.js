@@ -25,6 +25,11 @@ requireLogin();
 
   const threadSelect = document.getElementById("threadSelect");
   const newThreadBtn = document.getElementById("newThreadBtn");
+  const threadNameModal = document.getElementById("threadNameModal");
+  const threadNameModalTitle = document.getElementById("threadNameModalTitle");
+  const threadNameInput = document.getElementById("threadNameInput");
+  const threadNameCancelBtn = document.getElementById("threadNameCancelBtn");
+  const threadNameConfirmBtn = document.getElementById("threadNameConfirmBtn");
 
   const settingsModal = document.getElementById("settingsModal");
   const apiKeyInput = document.getElementById("apiKeyInput");
@@ -101,6 +106,54 @@ requireLogin();
     }
   })();
 
+  // ---- ช่องกรอกชื่อห้องแชท (ใช้แทน window.prompt() เพราะ prompt() ใช้งานไม่ได้บน
+  // iOS ตอนเปิดแบบ "เพิ่มไปหน้าจอโฮม") --------------------------------------
+  let threadNameCallback = null;
+
+  function askThreadName(title, defaultValue, callback) {
+    if (!threadNameModal) {
+      // เผื่อกรณี modal หาไม่เจอในหน้า ใช้ prompt() สำรอง (จะไม่ทำงานบน iOS standalone)
+      const val = window.prompt(title, defaultValue || "");
+      if (val && val.trim()) callback(val.trim());
+      return;
+    }
+    threadNameModalTitle.textContent = title;
+    threadNameInput.value = defaultValue || "";
+    threadNameCallback = callback;
+    threadNameModal.classList.remove("hidden");
+    setTimeout(function () { threadNameInput.focus(); }, 50);
+  }
+
+  function closeThreadNameModal() {
+    if (threadNameModal) threadNameModal.classList.add("hidden");
+    threadNameCallback = null;
+  }
+
+  if (threadNameConfirmBtn) {
+    threadNameConfirmBtn.addEventListener("click", function () {
+      const val = threadNameInput.value.trim();
+      const cb = threadNameCallback;
+      closeThreadNameModal();
+      if (val && cb) cb(val);
+    });
+  }
+  if (threadNameCancelBtn) {
+    threadNameCancelBtn.addEventListener("click", closeThreadNameModal);
+  }
+  if (threadNameInput) {
+    threadNameInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        threadNameConfirmBtn.click();
+      }
+    });
+  }
+  if (threadNameModal) {
+    threadNameModal.addEventListener("click", function (e) {
+      if (e.target === threadNameModal) closeThreadNameModal();
+    });
+  }
+
   // ---- thread UI --------------------------------------------------------
   function renderThreadSelect() {
     if (!threadSelect) return;
@@ -130,13 +183,12 @@ requireLogin();
       renameBtn.type = "button";
       renameBtn.textContent = "เปลี่ยนชื่อ";
       renameBtn.addEventListener("click", function () {
-        const newName = prompt("ตั้งชื่อห้องแชทใหม่:", t.name);
-        if (newName && newName.trim()) {
-          t.name = newName.trim();
+        askThreadName("เปลี่ยนชื่อห้องแชท", t.name, function (newName) {
+          t.name = newName;
           writeJson(LS_KEYS.CHAT_HISTORY, store);
           renderThreadSelect();
           renderThreadManagerList();
-        }
+        });
       });
       row.appendChild(renameBtn);
 
@@ -182,17 +234,17 @@ requireLogin();
 
   if (newThreadBtn) {
     newThreadBtn.addEventListener("click", function () {
-      const name = prompt("ตั้งชื่อห้องแชทใหม่:", "ห้องใหม่");
-      if (!name || !name.trim()) return;
-      const id = uuid();
-      store.threads.push({ id: id, name: name.trim(), createdAt: Date.now() });
-      store.messages[id] = [];
-      store.activeId = id;
-      history = store.messages[id];
-      writeJson(LS_KEYS.CHAT_HISTORY, store);
-      renderThreadSelect();
-      renderThreadManagerList();
-      renderAll();
+      askThreadName("ตั้งชื่อห้องแชทใหม่", "ห้องใหม่", function (name) {
+        const id = uuid();
+        store.threads.push({ id: id, name: name, createdAt: Date.now() });
+        store.messages[id] = [];
+        store.activeId = id;
+        history = store.messages[id];
+        writeJson(LS_KEYS.CHAT_HISTORY, store);
+        renderThreadSelect();
+        renderThreadManagerList();
+        renderAll();
+      });
     });
   }
 
