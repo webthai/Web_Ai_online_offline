@@ -8,7 +8,7 @@
    remove files from APP_SHELL and want old caches purged immediately.
    ========================================================================== */
 
-const CACHE_NAME = "aichat-shell-v2";
+const CACHE_NAME = "aichat-shell-v3";
 
 const APP_SHELL = [
   "./",
@@ -27,7 +27,13 @@ const APP_SHELL = [
 self.addEventListener("install", function (event) {
   event.waitUntil(
     caches.open(CACHE_NAME).then(function (cache) {
-      return cache.addAll(APP_SHELL);
+      return Promise.all(
+        APP_SHELL.map(function (url) {
+          return fetch(url, { cache: "no-store" }).then(function (response) {
+            return cache.put(url, response);
+          });
+        })
+      );
     })
   );
   self.skipWaiting();
@@ -56,7 +62,7 @@ self.addEventListener("fetch", function (event) {
   event.respondWith(
     caches.open(CACHE_NAME).then(function (cache) {
       return cache.match(event.request).then(function (cached) {
-        const networkFetch = fetch(event.request)
+        const networkFetch = fetch(event.request, { cache: "no-store" })
           .then(function (response) {
             if (response && response.ok) {
               cache.put(event.request, response.clone());
