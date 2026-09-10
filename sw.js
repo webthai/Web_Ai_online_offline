@@ -8,7 +8,7 @@
    remove files from APP_SHELL and want old caches purged immediately.
    ========================================================================== */
 
-const CACHE_NAME = "aichat-shell-v1";
+const CACHE_NAME = "aichat-shell-v2";
 
 const APP_SHELL = [
   "./",
