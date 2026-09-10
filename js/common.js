@@ -54,7 +54,7 @@ const DEPRECATED_GROQ_MODELS = [
 const TTS_MODEL = "canopylabs/orpheus-v1-english";
 const TTS_VOICE = "hannah";
 const STT_MODEL = "whisper-large-v3-turbo"; // รองรับหลายภาษารวมถึงไทย
-const VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"; // รองรับรูปภาพ (ยังไม่ได้เปิดใช้ในแอปตอนนี้)
+const VISION_MODEL = "qwen/qwen3.6-27b"; // รองรับรูปภาพ — ใช้เฉพาะตอนแนบรูปในแชท
 
 // ---- auth guard ------------------------------------------------------
 function requireLogin() {
